@@ -26,7 +26,7 @@ export default function App() {
   };
 
   const {
-    files, allFiles, totalFiles, totalSize, typeCounts,
+    files, allFiles, loading, totalFiles, totalSize, typeCounts,
     addFile, removeFile, removeFiles, replaceFile, updateUrl,
     search, setSearch,
     sortKey, setSortKey, sortDir, setSortDir,
@@ -145,13 +145,28 @@ export default function App() {
           <div className="mb-8">
             <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">All files</h1>
             <p className="text-sm text-slate-500 mt-1">
-              {totalFiles === 0
-                ? 'No files yet — upload your first file to get started'
-                : `${totalFiles} ${totalFiles === 1 ? 'file' : 'files'} stored`}
+              {loading
+                ? 'Loading your files…'
+                : totalFiles === 0
+                  ? 'No files yet — upload your first file to get started'
+                  : `${totalFiles} ${totalFiles === 1 ? 'file' : 'files'} stored`}
             </p>
           </div>
 
-          {totalFiles === 0 && !search ? (
+          {loading ? (
+            /* Loading skeleton */
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="bg-white border border-slate-200 rounded-xl overflow-hidden animate-pulse">
+                  <div className="h-32 bg-slate-100" />
+                  <div className="px-3 py-3 space-y-2">
+                    <div className="h-3 bg-slate-100 rounded w-3/4" />
+                    <div className="h-2.5 bg-slate-100 rounded w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : totalFiles === 0 && !search ? (
             /* Empty state */
             <div className="flex flex-col items-center justify-center py-24 text-center">
               <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-4">

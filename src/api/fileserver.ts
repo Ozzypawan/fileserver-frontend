@@ -24,6 +24,11 @@ export async function uploadFile(file: File, onProgress?: (pct: number) => void)
   return data;
 }
 
+export async function listFiles(): Promise<(UploadResponse & { uploadedAt?: string })[]> {
+  const { data } = await api.get('/fileserver-v1/api/files/list/');
+  return data;
+}
+
 export async function getFileMeta(path: string): Promise<UploadResponse> {
   const { data } = await api.get<UploadResponse>('/fileserver-v1/api/files/', {
     params: { path },

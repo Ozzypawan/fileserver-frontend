@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { FileItem, SortKey, SortDir, FilterType } from '../types';
 import { getFileCategory } from '../utils/format';
+import { listFiles } from '../api/fileserver';
 
 const STORAGE_KEY = 'fileserver_files';
 
@@ -15,11 +16,35 @@ function save(files: FileItem[]) {
 
 export function useFileStore() {
   const [rawFiles, setFiles] = useState<FileItem[]>(load);
-  const [search, setSearch] = useState('');
-  const [sortKey, setSortKey] = useState<SortKey>('uploadedAt');
-  const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [loading, setLoading]     = useState(true);
+  const [search, setSearch]       = useState('');
+  const [sortKey, setSortKey]     = useState<SortKey>('uploadedAt');
+  const [sortDir, setSortDir]     = useState<SortDir>('desc');
   const [filterType, setFilterType] = useState<FilterType>('all');
 
+  // Fetch global file list from backend on mount
+  useEffect(() => {
+    listFiles()
+      .then(data => {
+        const items: FileItem[] = data.map(f => ({
+          name:         f.name,
+          size:         f.size,
+          content_type: f.content_type,
+          extension:    f.extension,
+          url:          f.url,
+          path:         f.path,
+          uploadedAt:   f.uploadedAt ?? new Date().toISOString(),
+        }));
+        setFiles(items);
+        save(items);
+      })
+      .catch(() => {
+        // endpoint not yet available — keep localStorage data silently
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Keep localStorage in sync whenever files change
   useEffect(() => { save(rawFiles); }, [rawFiles]);
 
   const addFile = useCallback((f: FileItem) => {
@@ -54,8 +79,8 @@ export function useFileStore() {
     .filter(f => f.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
       let cmp = 0;
-      if (sortKey === 'name') cmp = a.name.localeCompare(b.name);
-      else if (sortKey === 'size') cmp = a.size - b.size;
+      if (sortKey === 'name')       cmp = a.name.localeCompare(b.name);
+      else if (sortKey === 'size')  cmp = a.size - b.size;
       else if (sortKey === 'extension') cmp = a.extension.localeCompare(b.extension);
       else cmp = new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime();
       return sortDir === 'asc' ? cmp : -cmp;
@@ -64,6 +89,7 @@ export function useFileStore() {
   return {
     files: filtered,
     allFiles: rawFiles,
+    loading,
     totalFiles: rawFiles.length,
     totalSize: rawFiles.reduce((s, f) => s + f.size, 0),
     typeCounts,
