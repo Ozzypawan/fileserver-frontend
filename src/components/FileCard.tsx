@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MoreVertical, Trash2, RefreshCw, Eye, Download, Link2, Check } from 'lucide-react';
 import type { FileItem } from '../types';
 import { formatBytes, formatDate, getFileCategory } from '../utils/format';
+import { getPresignedUrl } from '../api/fileserver';
 import FileIcon, { iconColor, iconBg } from './FileIcon';
 import toast from 'react-hot-toast';
 
@@ -10,11 +11,12 @@ interface Props {
   onPreview: () => void;
   onDelete: () => void;
   onUpdate: () => void;
+  onUrlRefreshed?: (path: string, url: string) => void;
   selected?: boolean;
   onToggleSelect?: () => void;
 }
 
-export default function FileCard({ item, onPreview, onDelete, onUpdate, selected, onToggleSelect }: Props) {
+export default function FileCard({ item, onPreview, onDelete, onUpdate, onUrlRefreshed, selected, onToggleSelect }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const category = getFileCategory(item.content_type);
 
@@ -41,7 +43,12 @@ export default function FileCard({ item, onPreview, onDelete, onUpdate, selected
             src={item.url}
             alt={item.name}
             className="w-full h-full object-cover"
-            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            onError={e => {
+              const img = e.target as HTMLImageElement;
+              getPresignedUrl(item.path)
+                .then(fresh => { img.src = fresh; onUrlRefreshed?.(item.path, fresh); })
+                .catch(() => { img.style.display = 'none'; });
+            }}
           />
         ) : (
           <FileIcon contentType={item.content_type} size={40} className={iconColor(item.content_type)} />

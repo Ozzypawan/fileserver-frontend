@@ -198,6 +198,7 @@ export default function App() {
                       onPreview={() => setPreviewing(f)}
                       onDelete={() => setDeleting(f)}
                       onUpdate={() => setUpdating(f)}
+                      onUrlRefreshed={updateUrl}
                       selected={selected.has(f.path)}
                       onToggleSelect={() => toggleSelect(f.path)}
                     />

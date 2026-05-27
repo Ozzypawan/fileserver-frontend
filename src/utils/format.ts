@@ -12,6 +12,21 @@ export function formatDate(iso: string): string {
   });
 }
 
+export function isUrlExpired(url: string): boolean {
+  try {
+    const u = new URL(url);
+    const date    = u.searchParams.get('X-Amz-Date');    // e.g. 20260527T145507Z
+    const expires = u.searchParams.get('X-Amz-Expires'); // seconds, e.g. 86400
+    if (!date || !expires) return false;
+    const signedAt  = new Date(
+      Date.UTC(+date.slice(0,4), +date.slice(4,6)-1, +date.slice(6,8),
+               +date.slice(9,11), +date.slice(11,13), +date.slice(13,15))
+    );
+    const expiresAt = new Date(signedAt.getTime() + +expires * 1000);
+    return Date.now() >= expiresAt.getTime() - 5 * 60 * 1000; // 5-min buffer
+  } catch { return false; }
+}
+
 export function getFileCategory(contentType: string): 'image' | 'video' | 'audio' | 'pdf' | 'csv' | 'doc' | 'text' | 'other' {
   if (contentType.startsWith('image/')) return 'image';
   if (contentType.startsWith('video/')) return 'video';

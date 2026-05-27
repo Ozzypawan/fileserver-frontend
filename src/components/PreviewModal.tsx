@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Download, RefreshCw, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getPresignedUrl } from '../api/fileserver';
 import type { FileItem } from '../types';
-import { getFileCategory, formatBytes, formatDate } from '../utils/format';
+import { getFileCategory, formatBytes, formatDate, isUrlExpired } from '../utils/format';
 import FileIcon, { iconColor, iconBg } from './FileIcon';
 import toast from 'react-hot-toast';
 
@@ -226,7 +226,13 @@ export default function PreviewModal({ item, onClose, onUrlRefreshed, hasPrev, h
 
   useEffect(() => {
     setUrl(item.url);
-  }, [item.url]);
+    // Auto-refresh if the stored URL is already expired on open
+    if (isUrlExpired(item.url)) {
+      getPresignedUrl(item.path)
+        .then(fresh => { setUrl(fresh); onUrlRefreshed(item.path, fresh); })
+        .catch(() => {});
+    }
+  }, [item.url, item.path, onUrlRefreshed]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
