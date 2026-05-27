@@ -16,7 +16,14 @@ import { deleteFile } from './api/fileserver';
 import type { FileItem, SortKey, ViewMode } from './types';
 
 export default function App() {
-  const [view, setView] = useState<'landing' | 'app'>('landing');
+  const [view, setView] = useState<'landing' | 'app'>(
+    () => (localStorage.getItem('fileserver_view') as 'landing' | 'app') ?? 'landing'
+  );
+
+  const handleSetView = (v: 'landing' | 'app') => {
+    localStorage.setItem('fileserver_view', v);
+    setView(v);
+  };
 
   const {
     files, allFiles, totalFiles, totalSize, typeCounts,
@@ -119,7 +126,7 @@ export default function App() {
     };
   }, [showUpload]);
 
-  if (view === 'landing') return <LandingPage onGetStarted={() => setView('app')} />;
+  if (view === 'landing') return <LandingPage onGetStarted={() => handleSetView('app')} />;
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
@@ -127,7 +134,7 @@ export default function App() {
         totalFiles={totalFiles}
         totalSize={totalSize}
         onUploadClick={() => setShowUpload(true)}
-        onHome={() => setView('landing')}
+        onHome={() => handleSetView('landing')}
         allFiles={allFiles}
       />
 
