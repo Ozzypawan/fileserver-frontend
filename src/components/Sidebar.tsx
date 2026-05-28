@@ -1,6 +1,7 @@
-import { X, HardDrive, Files, Upload, FileImage, FileVideo, FileAudio, FileType2, ScrollText, FileSpreadsheet, FileText, File } from 'lucide-react';
+import { X, HardDrive, Files, Upload, FileImage, FileVideo, FileAudio, FileType2, ScrollText, FileSpreadsheet, FileText, File, LogOut } from 'lucide-react';
 import type { FileItem } from '../types';
 import { formatBytes, getFileCategory } from '../utils/format';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface Props {
   totalFiles: number;
@@ -24,6 +25,7 @@ const TYPE_META = [
 ];
 
 export default function Sidebar({ totalFiles, totalSize, onUploadClick, onHome, allFiles, open, onClose }: Props) {
+  const { user, logout } = useAuthStore();
   const catStats = allFiles.reduce((acc, f) => {
     const cat = getFileCategory(f.content_type);
     acc[cat] = { count: (acc[cat]?.count ?? 0) + 1, size: (acc[cat]?.size ?? 0) + f.size };
@@ -114,7 +116,7 @@ export default function Sidebar({ totalFiles, totalSize, onUploadClick, onHome, 
         )}
 
         {/* Storage stats */}
-        <div className="px-4 py-5 border-t border-slate-100 mt-auto">
+        <div className="px-4 pt-5 border-t border-slate-100 mt-auto">
           <p className="text-xs text-slate-500 mb-3 font-medium uppercase tracking-wide">Storage</p>
           <div className="space-y-1.5">
             <div className="flex justify-between text-sm">
@@ -130,6 +132,28 @@ export default function Sidebar({ totalFiles, totalSize, onUploadClick, onHome, 
             <p className="text-xs text-slate-400">of 10 GB free</p>
           </div>
         </div>
+
+        {/* User + logout */}
+        {user && (
+          <div className="px-4 py-4 border-t border-slate-100 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+              <span className="text-xs font-semibold text-blue-600">
+                {(user.name || user.email).charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-slate-800 truncate">{user.name || user.email}</p>
+              <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
+            </div>
+            <button
+              onClick={logout}
+              title="Sign out"
+              className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+            >
+              <LogOut size={14} />
+            </button>
+          </div>
+        )}
       </aside>
     </>
   );

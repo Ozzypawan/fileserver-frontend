@@ -1,8 +1,47 @@
 import axios from 'axios';
+import { getAccessToken, getRefreshToken, saveTokens, clearTokens } from '../store/useAuthStore';
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
 const api = axios.create({ baseURL: BASE });
+
+api.interceptors.request.use(config => {
+  const token = getAccessToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+let refreshing: Promise<string | null> | null = null;
+
+api.interceptors.response.use(
+  res => res,
+  async err => {
+    const original = err.config;
+    if (err.response?.status === 401 && !original._retry) {
+      original._retry = true;
+      if (!refreshing) {
+        const refresh = getRefreshToken();
+        refreshing = refresh
+          ? axios.post<{ access: string }>(`${BASE}/fileserver-v1/api/auth/refresh/`, { refresh })
+              .then(r => {
+                const stored = JSON.parse(localStorage.getItem('fs_user') ?? 'null');
+                if (stored) saveTokens(r.data.access, refresh, stored);
+                return r.data.access;
+              })
+              .catch(() => { clearTokens(); return null; })
+              .finally(() => { refreshing = null; })
+          : Promise.resolve(null);
+      }
+      const newToken = await refreshing;
+      if (newToken) {
+        original.headers.Authorization = `Bearer ${newToken}`;
+        return api.request(original);
+      }
+      window.dispatchEvent(new Event('auth:logout'));
+    }
+    return Promise.reject(err);
+  },
+);
 
 export interface UploadResponse {
   name: string;

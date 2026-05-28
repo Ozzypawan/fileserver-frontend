@@ -11,11 +11,15 @@ import DeleteModal from './components/DeleteModal';
 import UpdateModal from './components/UpdateModal';
 import PreviewModal from './components/PreviewModal';
 import LandingPage from './components/LandingPage';
+import AuthPage from './components/AuthPage';
 import { useFileStore } from './store/useFileStore';
+import { useAuthStore } from './store/useAuthStore';
 import { deleteFile } from './api/fileserver';
 import type { FileItem, SortKey, ViewMode } from './types';
 
 export default function App() {
+  const { login, logout, isAuthenticated } = useAuthStore();
+
   const [view, setView] = useState<'landing' | 'app'>(
     () => (localStorage.getItem('fileserver_view') as 'landing' | 'app') ?? 'landing'
   );
@@ -24,6 +28,17 @@ export default function App() {
     localStorage.setItem('fileserver_view', v);
     setView(v);
   };
+
+  // Listen for token expiry / forced logout from axios interceptor
+  useEffect(() => {
+    const handler = () => logout();
+    window.addEventListener('auth:logout', handler);
+    return () => window.removeEventListener('auth:logout', handler);
+  }, [logout]);
+
+  if (!isAuthenticated) {
+    return <AuthPage onAuth={res => login(res.access, res.refresh, res.user)} />;
+  }
 
   const {
     files, allFiles, loading, totalFiles, totalSize, typeCounts,
