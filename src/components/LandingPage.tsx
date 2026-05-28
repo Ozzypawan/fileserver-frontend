@@ -33,7 +33,7 @@ const features = [
   {
     icon: Cloud,
     title: 'Secure Cloud Storage',
-    desc: 'Files stored on Backblaze B2 with presigned URLs for secure, time-limited access links.',
+    desc: 'Your files live in the cloud with secure, time-limited access links — nobody gets in unless you share.',
     color: 'text-sky-500',
     bg: 'bg-sky-50',
   },
@@ -114,7 +114,7 @@ export default function LandingPage({ onGetStarted }: Props) {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/20 text-blue-300 text-xs font-medium mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-            Powered by Backblaze B2 Cloud Storage
+            Fast, reliable cloud storage
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[72px] font-bold text-white tracking-tight leading-[1.08] mb-6">
@@ -126,8 +126,9 @@ export default function LandingPage({ onGetStarted }: Props) {
           </h1>
 
           <p className="text-base sm:text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Upload anything. Preview everything — images, videos, PDFs, Word docs,
-            spreadsheets. Search, sort, and manage your entire storage in one clean UI.
+            Drop a file, open it right there — no downloads, no switching apps.
+            Everything stays in one place so you can find it, share it, or delete it
+            whenever you need to.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
