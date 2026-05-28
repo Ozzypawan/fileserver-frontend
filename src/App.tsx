@@ -153,7 +153,7 @@ export default function App() {
           <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
             <HardDrive size={14} className="text-white" />
           </div>
-          <span className="font-semibold text-slate-900 text-sm">filesewa</span>
+          <span className="font-semibold text-slate-900 text-sm">Filesewa</span>
         </button>
         <button
           onClick={() => setShowUpload(true)}

@@ -57,7 +57,7 @@ export default function Sidebar({ totalFiles, totalSize, onUploadClick, onHome, 
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <HardDrive size={16} className="text-white" />
             </div>
-            <span className="font-semibold text-slate-900 text-base tracking-tight">filesewa</span>
+            <span className="font-semibold text-slate-900 text-base tracking-tight">Filesewa</span>
           </button>
           {/* Close button — mobile only */}
           <button onClick={onClose} className="md:hidden p-1.5 text-slate-400 hover:text-slate-600 transition-colors">

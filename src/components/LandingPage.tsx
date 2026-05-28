@@ -81,7 +81,7 @@ export default function LandingPage({ onGetStarted }: Props) {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <Cloud size={16} className="text-white" />
             </div>
-            <span className="font-semibold text-slate-900 text-base tracking-tight">filesewa</span>
+            <span className="font-semibold text-slate-900 text-base tracking-tight">Filesewa</span>
           </div>
           <button
             onClick={onGetStarted}
@@ -278,7 +278,7 @@ export default function LandingPage({ onGetStarted }: Props) {
             <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
               <Cloud size={13} className="text-white" />
             </div>
-            <span className="font-semibold text-white text-sm">filesewa</span>
+            <span className="font-semibold text-white text-sm">Filesewa</span>
           </div>
           <p className="text-sm text-slate-500">Simple, fast, and beautiful file management.</p>
         </div>
