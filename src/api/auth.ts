@@ -25,6 +25,14 @@ export async function googleLogin(credential: string): Promise<AuthResponse> {
   return data;
 }
 
+export async function forgotPassword(email: string): Promise<void> {
+  await axios.post(`${BASE}/fileserver-v1/api/auth/forgot-password/`, { email });
+}
+
+export async function resetPassword(uid: string, token: string, password: string): Promise<void> {
+  await axios.post(`${BASE}/fileserver-v1/api/auth/reset-password/`, { uid, token, password });
+}
+
 export async function refreshAccessToken(): Promise<string | null> {
   const refresh = getRefreshToken();
   if (!refresh) return null;

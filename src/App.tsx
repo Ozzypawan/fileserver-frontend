@@ -12,6 +12,7 @@ import UpdateModal from './components/UpdateModal';
 import PreviewModal from './components/PreviewModal';
 import LandingPage from './components/LandingPage';
 import AuthPage from './components/AuthPage';
+import ResetPasswordPage from './components/ResetPasswordPage';
 import { useFileStore } from './store/useFileStore';
 import { useAuthStore } from './store/useAuthStore';
 import { deleteFile } from './api/fileserver';
@@ -35,6 +36,14 @@ export default function App() {
     window.addEventListener('auth:logout', handler);
     return () => window.removeEventListener('auth:logout', handler);
   }, [logout]);
+
+  // Handle password reset links (?uid=...&token=...)
+  const urlParams = new URLSearchParams(window.location.search);
+  const resetUid   = urlParams.get('uid');
+  const resetToken = urlParams.get('token');
+  if (resetUid && resetToken) {
+    return <ResetPasswordPage uid={resetUid} token={resetToken} />;
+  }
 
   if (!isAuthenticated) {
     return <AuthPage onAuth={res => login(res.access, res.refresh, res.user)} />;
