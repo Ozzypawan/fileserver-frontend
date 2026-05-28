@@ -11,6 +11,7 @@ export interface UploadResponse {
   extension: string;
   url: string;
   path: string;
+  uploadedAt?: string;
 }
 
 export async function uploadFile(file: File, onProgress?: (pct: number) => void): Promise<UploadResponse> {
