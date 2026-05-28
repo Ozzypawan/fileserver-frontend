@@ -124,10 +124,10 @@ export default function Sidebar({ totalFiles, totalSize, onUploadClick, onHome, 
             <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-blue-500 rounded-full transition-all"
-                style={{ width: `${Math.min((totalSize / (1024 * 1024 * 500)) * 100, 100)}%` }}
+                style={{ width: `${Math.min((totalSize / (1024 * 1024 * 1024 * 10)) * 100, 100)}%` }}
               />
             </div>
-            <p className="text-xs text-slate-400">of 500 MB shown</p>
+            <p className="text-xs text-slate-400">of 10 GB free (Backblaze B2)</p>
           </div>
         </div>
       </aside>
