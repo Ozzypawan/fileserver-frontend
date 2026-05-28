@@ -168,10 +168,10 @@ function DocPreview({ url }: { url: string }) {
   if (!html) return <Spinner label="Loading document…" />;
 
   return (
-    <div className="w-full h-full overflow-auto bg-[#e8e8e8] flex justify-center py-10 px-4">
+    <div className="w-full h-full overflow-auto bg-[#e8e8e8] flex justify-center py-6 sm:py-10 px-3 sm:px-4">
       {/* Paper page */}
       <div
-        className="bg-white w-full max-w-[820px] shadow-2xl min-h-full px-[72px] py-[80px] text-[15px] leading-7 text-slate-900"
+        className="bg-white w-full max-w-[820px] shadow-2xl min-h-full px-5 sm:px-12 md:px-[72px] py-8 sm:py-14 md:py-[80px] text-[14px] sm:text-[15px] leading-7 text-slate-900"
         style={{ fontFamily: '"Georgia", "Times New Roman", serif' }}
       >
         <style>{`

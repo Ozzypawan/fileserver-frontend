@@ -117,7 +117,7 @@ export default function LandingPage({ onGetStarted }: Props) {
             Powered by Backblaze B2 Cloud Storage
           </div>
 
-          <h1 className="text-5xl sm:text-6xl md:text-[72px] font-bold text-white tracking-tight leading-[1.08] mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[72px] font-bold text-white tracking-tight leading-[1.08] mb-6">
             Your files,{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-violet-400 to-indigo-400">
               beautifully
@@ -125,7 +125,7 @@ export default function LandingPage({ onGetStarted }: Props) {
             managed
           </h1>
 
-          <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
             Upload anything. Preview everything — images, videos, PDFs, Word docs,
             spreadsheets. Search, sort, and manage your entire storage in one clean UI.
           </p>
@@ -168,9 +168,9 @@ export default function LandingPage({ onGetStarted }: Props) {
       </section>
 
       {/* ── How it works ───────────────────────────────────────── */}
-      <section className="py-24 bg-white">
+      <section className="py-16 md:py-24 bg-white">
         <div className="max-w-5xl mx-auto px-6">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12 md:mb-16">
             <span className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-3 block">How it works</span>
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900">Three steps, zero friction</h2>
           </div>
@@ -193,9 +193,9 @@ export default function LandingPage({ onGetStarted }: Props) {
       </section>
 
       {/* ── Features ───────────────────────────────────────────── */}
-      <section id="features" className="py-24 bg-slate-50">
+      <section id="features" className="py-16 md:py-24 bg-slate-50">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12 md:mb-16">
             <span className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-3 block">Features</span>
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">Everything you need</h2>
             <p className="text-lg text-slate-500 max-w-xl mx-auto">
@@ -221,9 +221,9 @@ export default function LandingPage({ onGetStarted }: Props) {
       </section>
 
       {/* ── File Types ─────────────────────────────────────────── */}
-      <section className="py-24 bg-white">
+      <section className="py-16 md:py-24 bg-white">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12 md:mb-16">
             <span className="text-xs font-semibold tracking-widest uppercase text-blue-500 mb-3 block">Format support</span>
             <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">Every format, fully previewed</h2>
             <p className="text-lg text-slate-500 max-w-xl mx-auto">
@@ -249,7 +249,7 @@ export default function LandingPage({ onGetStarted }: Props) {
       </section>
 
       {/* ── CTA ────────────────────────────────────────────────── */}
-      <section className="py-28 relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700">
+      <section className="py-20 md:py-28 relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700">
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute -top-32 -right-32 w-[400px] h-[400px] rounded-full bg-white/5 blur-3xl" />
           <div className="absolute -bottom-24 -left-24 w-[350px] h-[350px] rounded-full bg-indigo-400/10 blur-3xl" />

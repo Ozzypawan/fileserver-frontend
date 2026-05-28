@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
-import { CloudUpload, FolderOpen, Trash2, X } from 'lucide-react';
+import { CloudUpload, FolderOpen, Trash2, X, Menu, Upload, HardDrive } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Toolbar from './components/Toolbar';
 import FileCard from './components/FileCard';
@@ -33,6 +33,7 @@ export default function App() {
     filterType, setFilterType,
   } = useFileStore();
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [viewMode, setViewMode]     = useState<ViewMode>('grid');
   const [showUpload, setShowUpload] = useState(false);
   const [initialUploadFiles, setInitialUploadFiles] = useState<File[] | undefined>();
@@ -136,11 +137,36 @@ export default function App() {
         onUploadClick={() => setShowUpload(true)}
         onHome={() => handleSetView('landing')}
         allFiles={allFiles}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
+
+      {/* Mobile top bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center px-4 gap-3 shrink-0">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
+        >
+          <Menu size={20} />
+        </button>
+        <button onClick={() => handleSetView('landing')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
+            <HardDrive size={14} className="text-white" />
+          </div>
+          <span className="font-semibold text-slate-900 text-sm">Fileserver</span>
+        </button>
+        <button
+          onClick={() => setShowUpload(true)}
+          className="ml-auto flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+        >
+          <Upload size={14} />
+          Upload
+        </button>
+      </div>
 
       {/* Main */}
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl mx-auto px-6 py-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 md:pt-8 pb-8">
           {/* Page header */}
           <div className="mb-8">
             <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">All files</h1>

@@ -44,8 +44,9 @@ export default function Toolbar({
 
   return (
     <div className="space-y-3 mb-6">
-      {/* Filter chips */}
-      <div className="flex items-center gap-2 flex-wrap">
+      {/* Filter chips — scrollable on mobile */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-0.5 no-scrollbar"
+           style={{ scrollbarWidth: 'none' }}>
         {FILTER_OPTIONS.map(({ type, label, color, active }) => {
           const count = type === 'all' ? totalAll : (typeCounts[type] ?? 0);
           if (type !== 'all' && count === 0) return null;
@@ -72,7 +73,8 @@ export default function Toolbar({
       </div>
 
       {/* Search + Sort + View */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex items-center gap-2 overflow-x-auto pb-0.5 no-scrollbar"
+           style={{ scrollbarWidth: 'none' }}>
         {/* Search */}
         <div className="relative flex-1 min-w-48">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
