@@ -19,18 +19,18 @@ api.interceptors.response.use(
     const original = err.config;
     if (err.response?.status === 401 && !original._retry) {
       original._retry = true;
+      const refresh = getRefreshToken();
+      if (!refresh) return Promise.reject(err); // never logged in, don't logout
+
       if (!refreshing) {
-        const refresh = getRefreshToken();
-        refreshing = refresh
-          ? axios.post<{ access: string }>(`${BASE}/fileserver-v1/api/auth/refresh/`, { refresh })
-              .then(r => {
-                const stored = JSON.parse(localStorage.getItem('fs_user') ?? 'null');
-                if (stored) saveTokens(r.data.access, refresh, stored);
-                return r.data.access;
-              })
-              .catch(() => { clearTokens(); return null; })
-              .finally(() => { refreshing = null; })
-          : Promise.resolve(null);
+        refreshing = axios.post<{ access: string }>(`${BASE}/fileserver-v1/api/auth/refresh/`, { refresh })
+          .then(r => {
+            const stored = JSON.parse(localStorage.getItem('fs_user') ?? 'null');
+            if (stored) saveTokens(r.data.access, refresh, stored);
+            return r.data.access;
+          })
+          .catch(() => { clearTokens(); return null; })
+          .finally(() => { refreshing = null; });
       }
       const newToken = await refreshing;
       if (newToken) {

@@ -18,37 +18,8 @@ import { useAuthStore } from './store/useAuthStore';
 import { deleteFile } from './api/fileserver';
 import type { FileItem, SortKey, ViewMode } from './types';
 
-export default function App() {
-  const { login, logout, isAuthenticated } = useAuthStore();
-
-  const [view, setView] = useState<'landing' | 'app'>(
-    () => (localStorage.getItem('fileserver_view') as 'landing' | 'app') ?? 'landing'
-  );
-
-  const handleSetView = (v: 'landing' | 'app') => {
-    localStorage.setItem('fileserver_view', v);
-    setView(v);
-  };
-
-  // Listen for token expiry / forced logout from axios interceptor
-  useEffect(() => {
-    const handler = () => logout();
-    window.addEventListener('auth:logout', handler);
-    return () => window.removeEventListener('auth:logout', handler);
-  }, [logout]);
-
-  // Handle password reset links (?uid=...&token=...)
-  const urlParams = new URLSearchParams(window.location.search);
-  const resetUid   = urlParams.get('uid');
-  const resetToken = urlParams.get('token');
-  if (resetUid && resetToken) {
-    return <ResetPasswordPage uid={resetUid} token={resetToken} />;
-  }
-
-  if (!isAuthenticated) {
-    return <AuthPage onAuth={res => login(res.access, res.refresh, res.user)} />;
-  }
-
+// ── Authenticated app (all hooks here, no early returns before them) ──
+function FileManager() {
   const {
     files, allFiles, loading, totalFiles, totalSize, typeCounts,
     addFile, removeFile, removeFiles, replaceFile, updateUrl,
@@ -57,22 +28,29 @@ export default function App() {
     filterType, setFilterType,
   } = useFileStore();
 
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [viewMode, setViewMode]     = useState<ViewMode>('grid');
-  const [showUpload, setShowUpload] = useState(false);
+  const [view, setView] = useState<'landing' | 'app'>(
+    () => (localStorage.getItem('fileserver_view') as 'landing' | 'app') ?? 'landing'
+  );
+  const [sidebarOpen, setSidebarOpen]             = useState(false);
+  const [viewMode, setViewMode]                   = useState<ViewMode>('grid');
+  const [showUpload, setShowUpload]               = useState(false);
   const [initialUploadFiles, setInitialUploadFiles] = useState<File[] | undefined>();
-  const [deleting,   setDeleting]   = useState<FileItem | null>(null);
-  const [updating,   setUpdating]   = useState<FileItem | null>(null);
-  const [previewing, setPreviewing] = useState<FileItem | null>(null);
-  const [selected,   setSelected]   = useState<Set<string>>(new Set());
-  const [isDragging, setIsDragging] = useState(false);
+  const [deleting,   setDeleting]                 = useState<FileItem | null>(null);
+  const [updating,   setUpdating]                 = useState<FileItem | null>(null);
+  const [previewing, setPreviewing]               = useState<FileItem | null>(null);
+  const [selected,   setSelected]                 = useState<Set<string>>(new Set());
+  const [isDragging, setIsDragging]               = useState(false);
+
+  const handleSetView = (v: 'landing' | 'app') => {
+    localStorage.setItem('fileserver_view', v);
+    setView(v);
+  };
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
     else { setSortKey(key); setSortDir('asc'); }
   };
 
-  // ── Preview navigation ───────────────────────────────────────
   const previewIndex = previewing ? files.findIndex(f => f.path === previewing.path) : -1;
   const hasPrev = previewIndex > 0;
   const hasNext = previewIndex < files.length - 1;
@@ -83,7 +61,6 @@ export default function App() {
     if (previewIndex < files.length - 1) setPreviewing(files[previewIndex + 1]);
   }, [previewIndex, files]);
 
-  // ── Bulk operations ──────────────────────────────────────────
   const toggleSelect = (path: string) => {
     setSelected(prev => {
       const next = new Set(prev);
@@ -105,23 +82,18 @@ export default function App() {
     }
   };
 
-  // ── Paste-to-upload ──────────────────────────────────────────
   useEffect(() => {
     const onPaste = (e: ClipboardEvent) => {
       const pasted = Array.from(e.clipboardData?.items ?? [])
         .filter(i => i.kind === 'file')
         .map(i => i.getAsFile())
         .filter(Boolean) as File[];
-      if (pasted.length > 0) {
-        setInitialUploadFiles(pasted);
-        setShowUpload(true);
-      }
+      if (pasted.length > 0) { setInitialUploadFiles(pasted); setShowUpload(true); }
     };
     window.addEventListener('paste', onPaste);
     return () => window.removeEventListener('paste', onPaste);
   }, []);
 
-  // ── Global drag-drop ─────────────────────────────────────────
   useEffect(() => {
     let dragCounter = 0;
     const onDragEnter = (e: DragEvent) => {
@@ -130,14 +102,9 @@ export default function App() {
     const onDragLeave = () => { dragCounter--; if (dragCounter <= 0) { dragCounter = 0; setIsDragging(false); } };
     const onDragOver  = (e: DragEvent) => e.preventDefault();
     const onDrop      = (e: DragEvent) => {
-      e.preventDefault();
-      dragCounter = 0;
-      setIsDragging(false);
+      e.preventDefault(); dragCounter = 0; setIsDragging(false);
       const dropped = Array.from(e.dataTransfer?.files ?? []);
-      if (dropped.length > 0 && !showUpload) {
-        setInitialUploadFiles(dropped);
-        setShowUpload(true);
-      }
+      if (dropped.length > 0 && !showUpload) { setInitialUploadFiles(dropped); setShowUpload(true); }
     };
     window.addEventListener('dragenter', onDragEnter);
     window.addEventListener('dragleave', onDragLeave);
@@ -156,21 +123,14 @@ export default function App() {
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
       <Sidebar
-        totalFiles={totalFiles}
-        totalSize={totalSize}
+        totalFiles={totalFiles} totalSize={totalSize}
         onUploadClick={() => setShowUpload(true)}
         onHome={() => handleSetView('landing')}
-        allFiles={allFiles}
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        allFiles={allFiles} open={sidebarOpen} onClose={() => setSidebarOpen(false)}
       />
 
-      {/* Mobile top bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center px-4 gap-3 shrink-0">
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
-        >
+        <button onClick={() => setSidebarOpen(true)} className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">
           <Menu size={20} />
         </button>
         <button onClick={() => handleSetView('landing')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -179,32 +139,21 @@ export default function App() {
           </div>
           <span className="font-semibold text-slate-900 text-sm">Filesewa</span>
         </button>
-        <button
-          onClick={() => setShowUpload(true)}
-          className="ml-auto flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-        >
-          <Upload size={14} />
-          Upload
+        <button onClick={() => setShowUpload(true)} className="ml-auto flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+          <Upload size={14} />Upload
         </button>
       </div>
 
-      {/* Main */}
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 md:pt-8 pb-8">
-          {/* Page header */}
           <div className="mb-8">
             <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">All files</h1>
             <p className="text-sm text-slate-500 mt-1">
-              {loading
-                ? 'Loading your files…'
-                : totalFiles === 0
-                  ? 'No files yet — upload your first file to get started'
-                  : `${totalFiles} ${totalFiles === 1 ? 'file' : 'files'} stored`}
+              {loading ? 'Loading your files…' : totalFiles === 0 ? 'No files yet — upload your first file to get started' : `${totalFiles} ${totalFiles === 1 ? 'file' : 'files'} stored`}
             </p>
           </div>
 
           {loading ? (
-            /* Loading skeleton */
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {Array.from({ length: 12 }).map((_, i) => (
                 <div key={i} className="bg-white border border-slate-200 rounded-xl overflow-hidden animate-pulse">
@@ -217,56 +166,31 @@ export default function App() {
               ))}
             </div>
           ) : totalFiles === 0 && !search ? (
-            /* Empty state */
             <div className="flex flex-col items-center justify-center py-24 text-center">
               <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-4">
                 <FolderOpen size={28} className="text-blue-400" />
               </div>
               <h2 className="text-base font-semibold text-slate-800 mb-1">No files yet</h2>
-              <p className="text-sm text-slate-500 mb-6 max-w-xs">
-                Upload your first file, drag and drop anywhere, or paste from clipboard.
-              </p>
-              <button
-                onClick={() => setShowUpload(true)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-              >
-                <CloudUpload size={16} />
-                Upload files
+              <p className="text-sm text-slate-500 mb-6 max-w-xs">Upload your first file, drag and drop anywhere, or paste from clipboard.</p>
+              <button onClick={() => setShowUpload(true)} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                <CloudUpload size={16} />Upload files
               </button>
             </div>
           ) : (
             <>
-              <Toolbar
-                search={search}
-                onSearch={setSearch}
-                viewMode={viewMode}
-                onViewMode={setViewMode}
-                sortKey={sortKey}
-                sortDir={sortDir}
-                onSort={handleSort}
-                filterType={filterType}
+              <Toolbar search={search} onSearch={setSearch} viewMode={viewMode} onViewMode={setViewMode}
+                sortKey={sortKey} sortDir={sortDir} onSort={handleSort} filterType={filterType}
                 onFilterType={type => { setFilterType(type); setSelected(new Set()); }}
-                typeCounts={typeCounts}
-                total={files.length}
+                typeCounts={typeCounts} total={files.length}
               />
-
               {files.length === 0 ? (
-                <div className="text-center py-16 text-slate-400 text-sm">
-                  No files match your search.
-                </div>
+                <div className="text-center py-16 text-slate-400 text-sm">No files match your search.</div>
               ) : viewMode === 'grid' ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                   {files.map(f => (
-                    <FileCard
-                      key={f.path}
-                      item={f}
-                      onPreview={() => setPreviewing(f)}
-                      onDelete={() => setDeleting(f)}
-                      onUpdate={() => setUpdating(f)}
-                      onUrlRefreshed={updateUrl}
-                      selected={selected.has(f.path)}
-                      onToggleSelect={() => toggleSelect(f.path)}
-                    />
+                    <FileCard key={f.path} item={f} onPreview={() => setPreviewing(f)} onDelete={() => setDeleting(f)}
+                      onUpdate={() => setUpdating(f)} onUrlRefreshed={updateUrl}
+                      selected={selected.has(f.path)} onToggleSelect={() => toggleSelect(f.path)} />
                   ))}
                 </div>
               ) : (
@@ -284,15 +208,8 @@ export default function App() {
                     </thead>
                     <tbody>
                       {files.map(f => (
-                        <FileRow
-                          key={f.path}
-                          item={f}
-                          onPreview={() => setPreviewing(f)}
-                          onDelete={() => setDeleting(f)}
-                          onUpdate={() => setUpdating(f)}
-                          selected={selected.has(f.path)}
-                          onToggleSelect={() => toggleSelect(f.path)}
-                        />
+                        <FileRow key={f.path} item={f} onPreview={() => setPreviewing(f)} onDelete={() => setDeleting(f)}
+                          onUpdate={() => setUpdating(f)} selected={selected.has(f.path)} onToggleSelect={() => toggleSelect(f.path)} />
                       ))}
                     </tbody>
                   </table>
@@ -303,7 +220,6 @@ export default function App() {
         </div>
       </main>
 
-      {/* ── Global drag-drop overlay ── */}
       {isDragging && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-none">
           <div className="absolute inset-0 bg-blue-600/10 backdrop-blur-sm border-4 border-dashed border-blue-400 m-3 rounded-2xl" />
@@ -315,72 +231,44 @@ export default function App() {
         </div>
       )}
 
-      {/* ── Bulk action bar ── */}
       {selected.size > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 bg-slate-900 text-white rounded-2xl shadow-2xl">
-          <span className="text-sm font-medium">
-            {selected.size} file{selected.size > 1 ? 's' : ''} selected
-          </span>
+          <span className="text-sm font-medium">{selected.size} file{selected.size > 1 ? 's' : ''} selected</span>
           <div className="w-px h-4 bg-white/20" />
-          <button
-            onClick={handleBulkDelete}
-            className="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-300 transition-colors font-medium"
-          >
-            <Trash2 size={14} />
-            Delete
+          <button onClick={handleBulkDelete} className="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-300 transition-colors font-medium">
+            <Trash2 size={14} />Delete
           </button>
           <div className="w-px h-4 bg-white/20" />
-          <button
-            onClick={() => setSelected(new Set())}
-            className="flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors"
-          >
-            <X size={13} />
-            Clear
+          <button onClick={() => setSelected(new Set())} className="flex items-center gap-1 text-sm text-slate-400 hover:text-white transition-colors">
+            <X size={13} />Clear
           </button>
         </div>
       )}
 
-      {/* ── Modals ── */}
-      {showUpload && (
-        <UploadZone
-          onUploaded={item => addFile(item)}
-          onClose={() => { setShowUpload(false); setInitialUploadFiles(undefined); }}
-          initialFiles={initialUploadFiles}
-        />
-      )}
-      {deleting && (
-        <DeleteModal
-          path={deleting.path}
-          name={deleting.name}
-          onDeleted={() => { removeFile(deleting.path); setDeleting(null); }}
-          onClose={() => setDeleting(null)}
-        />
-      )}
-      {updating && (
-        <UpdateModal
-          item={updating}
-          onUpdated={updated => { replaceFile(updating.path, updated); setUpdating(null); }}
-          onClose={() => setUpdating(null)}
-        />
-      )}
-      {previewing && (
-        <PreviewModal
-          item={previewing}
-          onClose={() => setPreviewing(null)}
-          onUrlRefreshed={updateUrl}
-          hasPrev={hasPrev}
-          hasNext={hasNext}
-          onPrev={handlePrev}
-          onNext={handleNext}
-        />
-      )}
+      {showUpload && <UploadZone onUploaded={item => addFile(item)} onClose={() => { setShowUpload(false); setInitialUploadFiles(undefined); }} initialFiles={initialUploadFiles} />}
+      {deleting && <DeleteModal path={deleting.path} name={deleting.name} onDeleted={() => { removeFile(deleting.path); setDeleting(null); }} onClose={() => setDeleting(null)} />}
+      {updating && <UpdateModal item={updating} onUpdated={updated => { replaceFile(updating.path, updated); setUpdating(null); }} onClose={() => setUpdating(null)} />}
+      {previewing && <PreviewModal item={previewing} onClose={() => setPreviewing(null)} onUrlRefreshed={updateUrl} hasPrev={hasPrev} hasNext={hasNext} onPrev={handlePrev} onNext={handleNext} />}
 
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          style: { fontSize: '13px', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,.12)' },
-        }}
-      />
+      <Toaster position="bottom-right" toastOptions={{ style: { fontSize: '13px', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,.12)' } }} />
     </div>
   );
+}
+
+// ── Root: only auth hooks here, safe early returns ───────────────────
+export default function App() {
+  const { login, logout, isAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    const handler = () => logout();
+    window.addEventListener('auth:logout', handler);
+    return () => window.removeEventListener('auth:logout', handler);
+  }, [logout]);
+
+  const params = new URLSearchParams(window.location.search);
+  const uid = params.get('uid');
+  const token = params.get('token');
+  if (uid && token) return <ResetPasswordPage uid={uid} token={token} />;
+  if (!isAuthenticated) return <AuthPage onAuth={res => login(res.access, res.refresh, res.user)} />;
+  return <FileManager />;
 }
