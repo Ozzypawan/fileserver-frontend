@@ -143,6 +143,7 @@ function FileManager() {
         onHome={() => handleSetView('landing')}
         allFiles={allFiles} open={sidebarOpen} onClose={() => setSidebarOpen(false)}
         navView={navView} onNavView={setNavView}
+        onNewFolder={() => setShowNewFolder(true)}
       />
 
       <div className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center px-4 gap-3 shrink-0">
