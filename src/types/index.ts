@@ -29,4 +29,4 @@ export type ViewMode = 'grid' | 'list';
 export type SortKey = 'name' | 'size' | 'uploadedAt' | 'extension';
 export type SortDir = 'asc' | 'desc';
 export type FilterType = 'all' | 'image' | 'video' | 'audio' | 'pdf' | 'doc' | 'csv' | 'text' | 'other';
-export type NavView = 'files' | 'starred' | 'trash';
+export type NavView = 'files' | 'starred' | 'trash' | 'settings';

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { api } from './fileserver';
 import { getRefreshToken, saveTokens, clearTokens } from '../store/useAuthStore';
 import type { AuthUser } from '../store/useAuthStore';
 
@@ -31,6 +32,18 @@ export async function forgotPassword(email: string): Promise<void> {
 
 export async function resetPassword(uid: string, token: string, password: string): Promise<void> {
   await axios.post(`${BASE}/fileserver-v1/api/auth/reset-password/`, { uid, token, password });
+}
+
+export async function updateProfile(data: { name?: string; email?: string }): Promise<AuthUser> {
+  const { data: user } = await api.patch<AuthUser>('/fileserver-v1/api/auth/me/', data);
+  return user;
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  await api.post('/fileserver-v1/api/auth/change-password/', {
+    current_password: currentPassword,
+    new_password: newPassword,
+  });
 }
 
 export async function refreshAccessToken(): Promise<string | null> {

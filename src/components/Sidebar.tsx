@@ -1,4 +1,4 @@
-import { X, HardDrive, Upload, FolderPlus, FileImage, FileVideo, FileAudio, FileType2, ScrollText, FileSpreadsheet, FileText, File, LogOut, Home, Star, Trash2 } from 'lucide-react';
+import { X, HardDrive, Upload, FolderPlus, FileImage, FileVideo, FileAudio, FileType2, ScrollText, FileSpreadsheet, FileText, File, LogOut, Home, Star, Trash2, Settings } from 'lucide-react';
 import type { FileItem, NavView } from '../types';
 import { formatBytes, getFileCategory } from '../utils/format';
 import { useAuthStore } from '../store/useAuthStore';
@@ -112,6 +112,13 @@ export default function Sidebar({ totalFiles, totalSize, onUploadClick, onHome, 
           >
             <Trash2 size={16} />
             <span className="text-sm font-medium">Trash</span>
+          </button>
+          <button
+            onClick={() => { onNavView('settings'); onClose(); }}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${navView === 'settings' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}
+          >
+            <Settings size={16} />
+            <span className="text-sm font-medium">Settings</span>
           </button>
         </nav>
 

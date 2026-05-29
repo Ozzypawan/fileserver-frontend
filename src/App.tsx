@@ -18,6 +18,7 @@ import FolderCard from './components/FolderCard';
 import FolderRow from './components/FolderRow';
 import NewFolderModal from './components/NewFolderModal';
 import MoveModal from './components/MoveModal';
+import SettingsPage from './components/SettingsPage';
 import { useFileStore } from './store/useFileStore';
 import { useAuthStore } from './store/useAuthStore';
 import { useFolderStore } from './store/useFolderStore';
@@ -162,7 +163,8 @@ function FileManager() {
       </div>
 
       <main className="flex-1 overflow-y-auto">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 md:pt-8 pb-8">
+        {navView === 'settings' && <SettingsPage />}
+        {navView !== 'settings' && <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-20 md:pt-8 pb-8">
           <div className="mb-8">
             <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">All files</h1>
             <p className="text-sm text-slate-500 mt-1">
@@ -275,7 +277,7 @@ function FileManager() {
               ))}
             </>
           )}
-        </div>
+        </div>}
       </main>
 
       {isDragging && (
