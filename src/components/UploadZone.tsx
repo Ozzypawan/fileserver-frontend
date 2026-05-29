@@ -28,7 +28,13 @@ export default function UploadZone({ onUploaded, onClose, initialFiles }: Props)
       const result = await uploadFile(file, pct => {
         setQueue(q => q.map(e => e.file === file ? { ...e, progress: pct } : e));
       });
-      const item: FileItem = { ...result, uploadedAt: result.uploadedAt ?? new Date().toISOString() };
+      const item: FileItem = {
+        ...result,
+        id: result.id!,
+        folder_id: result.folder_id ?? null,
+        is_starred: result.is_starred ?? false,
+        uploadedAt: result.uploadedAt ?? new Date().toISOString(),
+      };
       onUploaded(item);
       setQueue(q => q.map(e => e.file === file ? { ...e, status: 'done', progress: 100 } : e));
     } catch (err: unknown) {

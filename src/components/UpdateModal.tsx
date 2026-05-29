@@ -21,7 +21,13 @@ export default function UpdateModal({ item, onUpdated, onClose }: Props) {
     setLoading(true);
     try {
       const result = await updateFile(item.path, file, name !== item.name ? name : undefined);
-      const updated: FileItem = { ...result, uploadedAt: new Date().toISOString() };
+      const updated: FileItem = {
+        ...result,
+        id: result.id!,
+        folder_id: result.folder_id ?? null,
+        is_starred: result.is_starred ?? false,
+        uploadedAt: new Date().toISOString(),
+      };
       toast.success('File updated');
       onUpdated(updated);
     } catch {

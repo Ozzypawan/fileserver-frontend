@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
-import { CloudUpload, FolderOpen, Trash2, X, Menu, Upload, HardDrive } from 'lucide-react';
+import { CloudUpload, FolderOpen, Trash2, X, Menu, Upload, HardDrive, FolderPlus } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Toolbar from './components/Toolbar';
 import FileCard from './components/FileCard';
@@ -13,21 +13,31 @@ import PreviewModal from './components/PreviewModal';
 import LandingPage from './components/LandingPage';
 import AuthPage from './components/AuthPage';
 import ResetPasswordPage from './components/ResetPasswordPage';
+import Breadcrumb from './components/Breadcrumb';
+import FolderCard from './components/FolderCard';
+import FolderRow from './components/FolderRow';
+import NewFolderModal from './components/NewFolderModal';
+import MoveModal from './components/MoveModal';
 import { useFileStore } from './store/useFileStore';
 import { useAuthStore } from './store/useAuthStore';
-import { deleteFile } from './api/fileserver';
-import type { FileItem, SortKey, ViewMode } from './types';
+import { useFolderStore } from './store/useFolderStore';
+import { deleteFile, moveFile } from './api/fileserver';
+import { createFolder, renameFolder, moveFolder, trashFolder } from './api/folders';
+import type { FileItem, FolderItem, SortKey, ViewMode, NavView } from './types';
 
 // ── Authenticated app (all hooks here, no early returns before them) ──
 function FileManager() {
+  const [navView, setNavView] = useState<NavView>('files');
+
+  const { currentFolderId, breadcrumb, folders, navigateTo, refresh: refreshFolders } = useFolderStore();
+
   const {
     files, allFiles, loading, totalFiles, totalSize, typeCounts,
     addFile, removeFile, removeFiles, replaceFile, updateUrl,
     search, setSearch,
     sortKey, setSortKey, sortDir, setSortDir,
     filterType, setFilterType,
-  } = useFileStore();
-
+  } = useFileStore(navView, currentFolderId);
   const [view, setView] = useState<'landing' | 'app'>(
     () => (localStorage.getItem('fileserver_view') as 'landing' | 'app') ?? 'landing'
   );
@@ -40,6 +50,11 @@ function FileManager() {
   const [previewing, setPreviewing]               = useState<FileItem | null>(null);
   const [selected,   setSelected]                 = useState<Set<string>>(new Set());
   const [isDragging, setIsDragging]               = useState(false);
+  const [showNewFolder, setShowNewFolder]         = useState(false);
+  const [movingItem, setMovingItem]               = useState<{ id: string; type: 'file' | 'folder' } | null>(null);
+  const [renamingFolder, setRenamingFolder]       = useState<FolderItem | null>(null);
+
+  const refresh = refreshFolders;
 
   const handleSetView = (v: 'landing' | 'app') => {
     localStorage.setItem('fileserver_view', v);
@@ -127,6 +142,7 @@ function FileManager() {
         onUploadClick={() => setShowUpload(true)}
         onHome={() => handleSetView('landing')}
         allFiles={allFiles} open={sidebarOpen} onClose={() => setSidebarOpen(false)}
+        navView={navView} onNavView={setNavView}
       />
 
       <div className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center px-4 gap-3 shrink-0">
@@ -153,6 +169,10 @@ function FileManager() {
             </p>
           </div>
 
+          {navView === 'files' && (
+            <Breadcrumb items={breadcrumb} onNavigate={navigateTo} />
+          )}
+
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {Array.from({ length: 12 }).map((_, i) => (
@@ -165,7 +185,7 @@ function FileManager() {
                 </div>
               ))}
             </div>
-          ) : totalFiles === 0 && !search ? (
+          ) : totalFiles === 0 && !search && (navView !== 'files' || folders.length === 0) ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
               <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-4">
                 <FolderOpen size={28} className="text-blue-400" />
@@ -178,14 +198,60 @@ function FileManager() {
             </div>
           ) : (
             <>
-              <Toolbar search={search} onSearch={setSearch} viewMode={viewMode} onViewMode={setViewMode}
-                sortKey={sortKey} sortDir={sortDir} onSort={handleSort} filterType={filterType}
-                onFilterType={type => { setFilterType(type); setSelected(new Set()); }}
-                typeCounts={typeCounts} total={files.length}
-              />
-              {files.length === 0 ? (
+              <div className="flex items-center gap-2 mb-4">
+                <Toolbar search={search} onSearch={setSearch} viewMode={viewMode} onViewMode={setViewMode}
+                  sortKey={sortKey} sortDir={sortDir} onSort={handleSort} filterType={filterType}
+                  onFilterType={type => { setFilterType(type); setSelected(new Set()); }}
+                  typeCounts={typeCounts} total={files.length}
+                />
+                {navView === 'files' && (
+                  <button
+                    onClick={() => setShowNewFolder(true)}
+                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors whitespace-nowrap"
+                  >
+                    <FolderPlus size={15} />
+                    New folder
+                  </button>
+                )}
+              </div>
+
+              {navView === 'files' && folders.length > 0 && (
+                viewMode === 'grid' ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-4">
+                    {folders.map(f => (
+                      <FolderCard
+                        key={f.id}
+                        folder={f}
+                        onOpen={() => navigateTo(f.id)}
+                        onRename={() => setRenamingFolder(f)}
+                        onMove={() => setMovingItem({ id: f.id, type: 'folder' })}
+                        onDelete={async () => { await trashFolder(f.id); refreshFolders(); }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white border border-slate-200 rounded-xl overflow-hidden mb-4">
+                    <table className="w-full">
+                      <tbody>
+                        {folders.map(f => (
+                          <FolderRow
+                            key={f.id}
+                            folder={f}
+                            onOpen={() => navigateTo(f.id)}
+                            onRename={() => setRenamingFolder(f)}
+                            onMove={() => setMovingItem({ id: f.id, type: 'folder' })}
+                            onDelete={async () => { await trashFolder(f.id); refreshFolders(); }}
+                          />
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              )}
+
+              {files.length === 0 && (navView !== 'files' || folders.length === 0) ? (
                 <div className="text-center py-16 text-slate-400 text-sm">No files match your search.</div>
-              ) : viewMode === 'grid' ? (
+              ) : files.length > 0 && (viewMode === 'grid' ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                   {files.map(f => (
                     <FileCard key={f.path} item={f} onPreview={() => setPreviewing(f)} onDelete={() => setDeleting(f)}
@@ -214,7 +280,7 @@ function FileManager() {
                     </tbody>
                   </table>
                 </div>
-              )}
+              ))}
             </>
           )}
         </div>
@@ -249,6 +315,45 @@ function FileManager() {
       {deleting && <DeleteModal path={deleting.path} name={deleting.name} onDeleted={() => { removeFile(deleting.path); setDeleting(null); }} onClose={() => setDeleting(null)} />}
       {updating && <UpdateModal item={updating} onUpdated={updated => { replaceFile(updating.path, updated); setUpdating(null); }} onClose={() => setUpdating(null)} />}
       {previewing && <PreviewModal item={previewing} onClose={() => setPreviewing(null)} onUrlRefreshed={updateUrl} hasPrev={hasPrev} hasNext={hasNext} onPrev={handlePrev} onNext={handleNext} />}
+
+      {renamingFolder && (
+        <NewFolderModal
+          mode="rename"
+          initialName={renamingFolder.name}
+          onConfirm={async (name) => {
+            await renameFolder(renamingFolder.id, name);
+            refreshFolders();
+            setRenamingFolder(null);
+          }}
+          onClose={() => setRenamingFolder(null)}
+        />
+      )}
+
+      {showNewFolder && (
+        <NewFolderModal
+          mode="create"
+          onConfirm={async (name) => {
+            await createFolder(name, currentFolderId);
+            refreshFolders();
+            setShowNewFolder(false);
+          }}
+          onClose={() => setShowNewFolder(false)}
+        />
+      )}
+
+      {movingItem && (
+        <MoveModal
+          excludeIds={movingItem.type === 'folder' ? [movingItem.id] : []}
+          onConfirm={async (folderId) => {
+            if (movingItem.type === 'file') await moveFile(movingItem.id, folderId);
+            else await moveFolder(movingItem.id, folderId);
+            refresh();
+            refreshFolders();
+            setMovingItem(null);
+          }}
+          onClose={() => setMovingItem(null)}
+        />
+      )}
 
       <Toaster position="bottom-right" toastOptions={{ style: { fontSize: '13px', borderRadius: '10px', boxShadow: '0 4px 16px rgba(0,0,0,.12)' } }} />
     </div>

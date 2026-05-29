@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { FileItem, SortKey, SortDir, FilterType } from '../types';
+import type { FileItem, SortKey, SortDir, FilterType, NavView } from '../types';
 import { getFileCategory } from '../utils/format';
-import { listFiles } from '../api/fileserver';
+import { listFiles, listStarred, listTrash } from '../api/fileserver';
 
 const STORAGE_KEY = 'fileserver_files';
 
@@ -14,7 +14,7 @@ function save(files: FileItem[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(files));
 }
 
-export function useFileStore() {
+export function useFileStore(navView: NavView = 'files', currentFolderId: string | null = null) {
   const [rawFiles, setFiles] = useState<FileItem[]>(load);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
@@ -22,11 +22,24 @@ export function useFileStore() {
   const [sortDir, setSortDir]     = useState<SortDir>('desc');
   const [filterType, setFilterType] = useState<FilterType>('all');
 
-  // Fetch global file list from backend on mount
+  // Fetch file list from backend whenever navView or currentFolderId changes
   useEffect(() => {
-    listFiles()
+    setLoading(true);
+
+    let request: Promise<{ id?: string; name: string; size: number; content_type: string; extension: string; url: string; path: string; uploadedAt?: string; folder_id?: string | null; is_starred?: boolean }[]>;
+
+    if (navView === 'starred') {
+      request = listStarred();
+    } else if (navView === 'trash') {
+      request = listTrash();
+    } else {
+      request = listFiles(currentFolderId ?? undefined);
+    }
+
+    request
       .then(data => {
         const items: FileItem[] = data.map(f => ({
+          id:           f.id ?? '',
           name:         f.name,
           size:         f.size,
           content_type: f.content_type,
@@ -34,6 +47,8 @@ export function useFileStore() {
           url:          f.url,
           path:         f.path,
           uploadedAt:   f.uploadedAt ?? new Date().toISOString(),
+          folder_id:    f.folder_id ?? null,
+          is_starred:   f.is_starred ?? false,
         }));
         setFiles(items);
         save(items);
@@ -42,7 +57,7 @@ export function useFileStore() {
         // endpoint not yet available — keep localStorage data silently
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [navView, currentFolderId]);
 
   // Keep localStorage in sync whenever files change
   useEffect(() => { save(rawFiles); }, [rawFiles]);

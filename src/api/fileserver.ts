@@ -3,7 +3,7 @@ import { getAccessToken, getRefreshToken, saveTokens, clearTokens } from '../sto
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
-const api = axios.create({ baseURL: BASE });
+export const api = axios.create({ baseURL: BASE });
 
 api.interceptors.request.use(config => {
   const token = getAccessToken();
@@ -44,6 +44,7 @@ api.interceptors.response.use(
 );
 
 export interface UploadResponse {
+  id?: string;
   name: string;
   size: number;
   content_type: string;
@@ -51,6 +52,8 @@ export interface UploadResponse {
   url: string;
   path: string;
   uploadedAt?: string;
+  folder_id?: string | null;
+  is_starred?: boolean;
 }
 
 export async function uploadFile(file: File, onProgress?: (pct: number) => void): Promise<UploadResponse> {
@@ -64,8 +67,10 @@ export async function uploadFile(file: File, onProgress?: (pct: number) => void)
   return data;
 }
 
-export async function listFiles(): Promise<(UploadResponse & { uploadedAt?: string })[]> {
-  const { data } = await api.get('/fileserver-v1/api/files/list/');
+export async function listFiles(folderId?: string): Promise<(UploadResponse & { uploadedAt?: string })[]> {
+  const params: Record<string, string> = {};
+  if (folderId !== undefined) params.folder_id = folderId;
+  const { data } = await api.get('/fileserver-v1/api/files/list/', { params });
   return data;
 }
 
@@ -95,4 +100,87 @@ export async function updateFile(path: string, file: File, newName?: string): Pr
     params: { path },
   });
   return data;
+}
+
+export async function renameFile(id: string, displayName: string): Promise<UploadResponse> {
+  const { data } = await api.patch<UploadResponse>(`/fileserver-v1/api/files/${id}/rename/`, {
+    display_name: displayName,
+  });
+  return data;
+}
+
+export async function moveFile(id: string, folderId: string | null): Promise<UploadResponse> {
+  const { data } = await api.patch<UploadResponse>(`/fileserver-v1/api/files/${id}/move/`, {
+    folder_id: folderId,
+  });
+  return data;
+}
+
+export async function copyFile(id: string, folderId?: string | null, name?: string): Promise<UploadResponse> {
+  const body: Record<string, unknown> = {};
+  if (folderId !== undefined) body.folder_id = folderId;
+  if (name !== undefined) body.name = name;
+  const { data } = await api.post<UploadResponse>(`/fileserver-v1/api/files/${id}/copy/`, body);
+  return data;
+}
+
+export async function starFile(id: string): Promise<{ is_starred: boolean }> {
+  const { data } = await api.post<{ is_starred: boolean }>(`/fileserver-v1/api/files/${id}/star/`);
+  return data;
+}
+
+export async function trashFile(id: string): Promise<void> {
+  await api.delete(`/fileserver-v1/api/files/${id}/trash/`);
+}
+
+export async function restoreFile(id: string): Promise<void> {
+  await api.post(`/fileserver-v1/api/files/${id}/restore/`);
+}
+
+export async function permanentDeleteFile(id: string): Promise<void> {
+  await api.delete(`/fileserver-v1/api/files/${id}/permanent/`);
+}
+
+export async function listStarred(): Promise<(UploadResponse & { uploadedAt?: string })[]> {
+  const { data } = await api.get('/fileserver-v1/api/files/starred/');
+  return data;
+}
+
+export async function listRecent(): Promise<(UploadResponse & { uploadedAt?: string })[]> {
+  const { data } = await api.get('/fileserver-v1/api/files/recent/');
+  return data;
+}
+
+export async function listTrash(): Promise<(UploadResponse & { uploadedAt?: string })[]> {
+  const { data } = await api.get('/fileserver-v1/api/trash/');
+  return data;
+}
+
+export async function bulkTrash(fileIds: string[], folderIds?: string[]): Promise<void> {
+  await api.post('/fileserver-v1/api/files/bulk/trash/', {
+    file_ids: fileIds,
+    folder_ids: folderIds ?? [],
+  });
+}
+
+export async function bulkRestore(fileIds: string[], folderIds?: string[]): Promise<void> {
+  await api.post('/fileserver-v1/api/files/bulk/restore/', {
+    file_ids: fileIds,
+    folder_ids: folderIds ?? [],
+  });
+}
+
+export async function bulkMove(fileIds: string[], folderIds: string[], folderId: string | null): Promise<void> {
+  await api.post('/fileserver-v1/api/files/bulk/move/', {
+    file_ids: fileIds,
+    folder_ids: folderIds,
+    folder_id: folderId,
+  });
+}
+
+export async function bulkStar(fileIds: string[], starred: boolean): Promise<void> {
+  await api.post('/fileserver-v1/api/files/bulk/star/', {
+    file_ids: fileIds,
+    starred,
+  });
 }

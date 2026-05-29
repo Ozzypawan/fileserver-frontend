@@ -1,5 +1,5 @@
-import { X, HardDrive, Files, Upload, FileImage, FileVideo, FileAudio, FileType2, ScrollText, FileSpreadsheet, FileText, File, LogOut } from 'lucide-react';
-import type { FileItem } from '../types';
+import { X, HardDrive, Files, Upload, FileImage, FileVideo, FileAudio, FileType2, ScrollText, FileSpreadsheet, FileText, File, LogOut, Home, Star, Trash2 } from 'lucide-react';
+import type { FileItem, NavView } from '../types';
 import { formatBytes, getFileCategory } from '../utils/format';
 import { useAuthStore } from '../store/useAuthStore';
 
@@ -11,6 +11,8 @@ interface Props {
   allFiles: FileItem[];
   open: boolean;
   onClose: () => void;
+  navView: NavView;
+  onNavView: (v: NavView) => void;
 }
 
 const TYPE_META = [
@@ -24,7 +26,7 @@ const TYPE_META = [
   { cat: 'other', label: 'Other',         Icon: File,             color: 'text-slate-400',   bg: 'bg-slate-100'  },
 ];
 
-export default function Sidebar({ totalFiles, totalSize, onUploadClick, onHome, allFiles, open, onClose }: Props) {
+export default function Sidebar({ totalFiles, totalSize, onUploadClick, onHome, allFiles, open, onClose, navView, onNavView }: Props) {
   const { user, logout } = useAuthStore();
   const catStats = allFiles.reduce((acc, f) => {
     const cat = getFileCategory(f.content_type);
@@ -79,7 +81,28 @@ export default function Sidebar({ totalFiles, totalSize, onUploadClick, onHome, 
         </div>
 
         {/* Nav */}
-        <nav className="px-3 pt-4">
+        <nav className="px-3 pt-4 space-y-0.5">
+          <button
+            onClick={() => { onNavView('files'); onClose(); }}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${navView === 'files' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}
+          >
+            <Home size={16} />
+            <span className="text-sm font-medium">My Files</span>
+          </button>
+          <button
+            onClick={() => { onNavView('starred'); onClose(); }}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${navView === 'starred' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}
+          >
+            <Star size={16} />
+            <span className="text-sm font-medium">Starred</span>
+          </button>
+          <button
+            onClick={() => { onNavView('trash'); onClose(); }}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-left ${navView === 'trash' ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-50'}`}
+          >
+            <Trash2 size={16} />
+            <span className="text-sm font-medium">Trash</span>
+          </button>
           <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-blue-50 text-blue-700">
             <Files size={16} />
             <span className="text-sm font-medium">All files</span>
