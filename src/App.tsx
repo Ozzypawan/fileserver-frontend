@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
-import { CloudUpload, FolderOpen, Trash2, X, Menu, Upload, HardDrive, FolderPlus } from 'lucide-react';
+import { CloudUpload, FolderOpen, Trash2, X, Menu, Upload, HardDrive } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Toolbar from './components/Toolbar';
 import FileCard from './components/FileCard';
@@ -199,21 +199,12 @@ function FileManager() {
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-2 mb-4">
+              <div className="mb-4">
                 <Toolbar search={search} onSearch={setSearch} viewMode={viewMode} onViewMode={setViewMode}
                   sortKey={sortKey} sortDir={sortDir} onSort={handleSort} filterType={filterType}
                   onFilterType={type => { setFilterType(type); setSelected(new Set()); }}
                   typeCounts={typeCounts} total={files.length}
                 />
-                {navView === 'files' && (
-                  <button
-                    onClick={() => setShowNewFolder(true)}
-                    className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors whitespace-nowrap"
-                  >
-                    <FolderPlus size={15} />
-                    New folder
-                  </button>
-                )}
               </div>
 
               {navView === 'files' && folders.length > 0 && (
